@@ -37,3 +37,9 @@ vignettes/*.pdf
 
 # R Environment Variables
 .Renviron
+.Rproj.user
+
+dataExternal/*
+temp/*
+results/*
+*.Rproj
