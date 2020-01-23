@@ -127,7 +127,7 @@ com3 = paste(p1)
 p1 = paste('samtools index', '$bamq10sort', sep=' ')
 com3.1 = paste(p1)
 # remove duplicates, for single end reads
-p1 = paste('samtools -s rmdup', '$bamq10sort', '$bamrd', sep=' ')
+p1 = paste('samtools rmdup -s', '$bamq10sort', '$bamrd', sep=' ')
 com4 = paste(p1)
 # create index
 p1 = paste('samtools index', '$bamrd', sep=' ')
