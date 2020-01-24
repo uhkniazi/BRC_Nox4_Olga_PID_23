@@ -49,11 +49,11 @@ source('CDiagnosticPlots.R')
 # delete the file after source
 unlink('CDiagnosticPlots.R')
 
-oDiag.1 = CDiagnosticPlots(log(mData+0.5), 'Raw')
+oDiag.1 = CDiagnosticPlots(log(mData+1), 'Raw')
 # the batch variable we wish to colour by, 
 # this can be any grouping/clustering in the data capture process
 str(dfSample)
-fBatch = factor(dfSample$group1)
+fBatch = factor(dfSample$group2)
 levels(fBatch)
 fBatch = fBatch:factor(dfSample$group3)
 
@@ -67,6 +67,7 @@ plot.dendogram(oDiag.1, fBatch, labels_cex = 1, cex.main=0.7)
 l = CDiagnosticPlotsGetParameters(oDiag.1)
 l$PCA.jitter = F
 l$HC.jitter = F
+l$PCA.scaleVariables = F
 oDiag.1 = CDiagnosticPlotsSetParameters(oDiag.1, l)
 plot.PCA(oDiag.1, fBatch, cex.main=1, legend.pos = 'topleft')
 plot.dendogram(oDiag.1, fBatch, labels_cex = 1)
@@ -92,11 +93,13 @@ dfSample.2 = dfSample[sapply(m, function(x) return(x[1])), ]
 identical(colnames(mData), as.character(dfSample.2$fReplicates))
 dim(dfSample.2)
 dfSample.2 = droplevels.data.frame(dfSample.2)
-oDiag.2 = CDiagnosticPlots(log(mData+0.5), 'Raw Merged')
+oDiag.2 = CDiagnosticPlots(log(mData+1), 'Raw Merged')
 l = CDiagnosticPlotsGetParameters(oDiag.2)
 l$PCA.jitter = F
 l$HC.jitter = F
+l$PCA.scaleVariables = F
 oDiag.2 = CDiagnosticPlotsSetParameters(oDiag.2, l)
+plot.missing.summary(oDiag.2, factor(dfSample.2$group1))
 plot.PCA(oDiag.2, factor(dfSample.2$group1), legend.pos = 'topleft')
 plot.PCA(oDiag.2, factor(dfSample.2$group2), legend.pos = 'topleft')
 xtabs( ~ group1 + group2, data=dfSample.2)
@@ -125,11 +128,11 @@ mData.norm = sweep(mData, 2, sf, '/')
 identical(colnames(mData.norm), as.character(dfSample.2$fReplicates))
 
 ## compare the normalised and raw data
-oDiag.3 = CDiagnosticPlots(log(mData.norm+0.5), 'Normalised')
+oDiag.3 = CDiagnosticPlots(log(round(mData.norm,0)+1), 'Normalised')
 # the batch variable we wish to colour by, 
 # this can be any grouping/clustering in the data capture process
 str(dfSample.2)
-fBatch = factor(dfSample.2$group2)
+fBatch = factor(dfSample.2$group1)
 levels(fBatch)
 fBatch = fBatch:factor(dfSample.2$group2)
 
@@ -151,10 +154,11 @@ plot.missing.summary(oDiag.3, fBatch, axis.label.cex = 1, cex.main=1)
 l = CDiagnosticPlotsGetParameters(oDiag.3)
 l$PCA.jitter = F
 l$HC.jitter = F
+l$PCA.scaleVariables = F
 
 oDiag.3 = CDiagnosticPlotsSetParameters(oDiag.3, l)
 plot.PCA(oDiag.2, fBatch, legend.pos = 'topleft')
-plot.PCA(oDiag.3, fBatch)
+plot.PCA(oDiag.3, fBatch, legend.pos = 'topright')
 plot.dendogram(oDiag.2, fBatch, labels_cex = 1)
 plot.dendogram(oDiag.3, fBatch, labels_cex = 1)
 
@@ -177,32 +181,29 @@ densityplot(~ values | ind, data=dfData)
 ### start from here
 str(dfSample.2)
 dfData$fTreatment = factor(dfSample.2$group1)
-dfData$fBioRep = factor((gsub('\\d+.+(HOM|WT_KLS_\\d).+(KLS_\\d)', '\\1_\\2', dfSample.2$group3)))
-dfData$fBatch = factor(dfSample.2$group2)
+dfData$fLitter = factor(dfSample.2$group2)
 
-densityplot(~ values | ind, groups=fBatch, data=dfData, auto.key = list(columns=3))
-densityplot(~ values | ind, groups=fTreatment, data=dfData, auto.key = list(columns=3))
-densityplot(~ values | ind, groups=fBioRep, data=dfData, auto.key = list(columns=3))
+densityplot(~ values | ind, groups=fLitter, data=dfData, auto.key = list(columns=3))
+densityplot(~ values | ind, groups=fTreatment, data=dfData, auto.key = list(columns=2))
+
 # format data for modelling
 dfData$Coef.1 = factor(dfData$fTreatment:dfData$ind)
-dfData$Coef.2 = factor(dfData$fBioRep:dfData$ind)
-dfData$Coef.3 = factor(dfData$fBatch:dfData$ind)
-dfData$Coef.4 = factor(dfData$Coef.1:dfData$Coef.3)
+dfData$Coef.2 = factor(dfData$fLitter:dfData$ind)
+dfData$Coef.3 = factor(dfData$Coef.1:dfData$Coef.2)
 str(dfData)
 
 fit.lme1 = lmer(values ~ 1  + (1 | Coef.1), data=dfData)
 fit.lme2 = lmer(values ~ 1  + (1 | Coef.1) + (1 | Coef.2), data=dfData)
-fit.lme3 = lmer(values ~ 1  + (1 | Coef.1) + (1 | Coef.3), data=dfData)
-fit.lme4 = lmer(values ~ 1  + (1 | Coef.1) + (1 | Coef.3) + (1 | Coef.4), data=dfData)
+fit.lme3 = lmer(values ~ 1  + (1 | Coef.3), data=dfData)
 
-anova(fit.lme1, fit.lme2, fit.lme3, fit.lme4)
+anova(fit.lme1, fit.lme2, fit.lme3)
 
 summary(fit.lme1)
-summary(fit.lme4)
-plot((fitted(fit.lme4)), resid(fit.lme4), pch=20, cex=0.7)
-lines(lowess((fitted(fit.lme4)), resid(fit.lme4)), col=2)
+summary(fit.lme2)
+plot((fitted(fit.lme1)), resid(fit.lme1), pch=20, cex=0.7)
+lines(lowess((fitted(fit.lme1)), resid(fit.lme1)), col=2)
 hist(dfData$values, prob=T)
-lines(density(fitted(fit.lme4)))
+lines(density(fitted(fit.lme1)))
 
 ## fit model with stan with various model sizes
 library(rstan)
@@ -215,14 +216,14 @@ stanDso = rstan::stan_model(file='tResponsePartialPooling.stan')
 ######## models of 3 sizes using stan
 str(dfData)
 m1 = model.matrix(values ~ Coef.1 - 1, data=dfData)
-m2 = model.matrix(values ~ Coef.3 - 1, data=dfData)
-m3 = model.matrix(values ~ Coef.4 - 1, data=dfData)
+m2 = model.matrix(values ~ Coef.2 - 1, data=dfData)
+m3 = model.matrix(values ~ Coef.3 - 1, data=dfData)
 m = cbind(m1, m2, m3)
 
 lStanData = list(Ntotal=nrow(dfData), Ncol=ncol(m), X=m,
                  NscaleBatches=3, NBatchMap=c(rep(1, times=nlevels(dfData$Coef.1)),
-                                              rep(2, times=nlevels(dfData$Coef.3)),
-                                              rep(3, times=nlevels(dfData$Coef.4))),
+                                              rep(2, times=nlevels(dfData$Coef.2)),
+                                              rep(3, times=nlevels(dfData$Coef.3))),
                  y=dfData$values)
 
 fit.stan.3 = sampling(stanDso, data=lStanData, iter=5000, chains=2, pars=c('betas', 'populationMean', 'sigmaPop', 'sigmaRan',
@@ -236,12 +237,12 @@ traceplot(fit.stan.3, 'sigmaRan')
 
 ### 2 covariates
 m1 = model.matrix(values ~ Coef.1 - 1, data=dfData)
-m2 = model.matrix(values ~ Coef.3 - 1, data=dfData)
+m2 = model.matrix(values ~ Coef.2 - 1, data=dfData)
 m = cbind(m1, m2)
 
 lStanData = list(Ntotal=nrow(dfData), Ncol=ncol(m), X=m,
                  NscaleBatches=2, NBatchMap=c(rep(1, times=nlevels(dfData$Coef.1)),
-                                              rep(2, times=nlevels(dfData$Coef.3))
+                                              rep(2, times=nlevels(dfData$Coef.2))
                  ),
                  y=dfData$values)
 
@@ -267,7 +268,7 @@ compare(fit.stan.3, fit.stan.2, fit.stan.1)
 compare(fit.stan.3, fit.stan.2, fit.stan.1, func = LOO)
 plot(compare(fit.stan.3, fit.stan.2, fit.stan.1))
 
-plot(LOOPk(fit.stan.3) ~ WAIC(fit.stan.3, pointwise = T))
+plot(LOOPk(fit.stan.1) ~ WAIC(fit.stan.1, pointwise = T))
 
 ## plot coefficients
 ct = coeftab(fit.stan.3, fit.stan.2, fit.stan.1)
@@ -298,7 +299,7 @@ for (i in 1:300){
 }
 
 dim(mDraws.sim)
-plot(density(dfData$values), main='posterior predictive density plots, model 3')
+plot(density(dfData$values), main='posterior predictive density plots, model 1')
 apply(mDraws.sim, 2, function(x) lines(density(x), lwd=0.5, col='lightgrey'))
 lines(density(dfData$values))
 
@@ -314,10 +315,10 @@ plot(dfData$values[dfData$ind == 'PC1'], dfData$values[dfData$ind == 'PC2'],
      col=c(1,2)[as.numeric(dfData$fTreatment[dfData$ind == 'PC1'])], main='PCA Components - original and simulated',
      xlab='PC1', ylab='PC2')
 points(rowMeans(mDraws.sim)[dfData$ind == 'PC1'], rowMeans(mDraws.sim)[dfData$ind == 'PC2'],
-       col=c(1,2)[as.numeric(dfData$fTreatment[dfData$ind == 'PC1'])], pch='1')
+       col=c(1,2)[as.numeric(dfData$fTreatment[dfData$ind == 'PC1'])], pch='2')
 
 plot(dfData$values[dfData$ind == 'PC1'], dfData$values[dfData$ind == 'PC2'], 
-     col=c(1,2)[as.numeric(dfData$fTreatment[dfData$ind == 'PC1'])], main='PCA Components - original and model 3',
+     col=c(1,2)[as.numeric(dfData$fTreatment[dfData$ind == 'PC1'])], main='PCA Components - original and model 2',
      xlab='PC1', ylab='PC2', xlim=c(-3, 3), ylim=c(-2, 2))
 
 apply(mDraws.sim, 2, function(x) {
