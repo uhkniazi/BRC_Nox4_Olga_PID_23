@@ -172,7 +172,7 @@ fit.stan = sampling(stanDso, data=lStanData, iter=1500, chains=4,
                            'phi_scaled'
                     ),
                     cores=4, control=list(adapt_delta=0.99, max_treedepth = 11))#, init=initf)
-save(fit.stan, file='results/fit.stan.nb_28Jan.rds')
+#save(fit.stan, file='results/fit.stan.nb_28Jan.rds')
 ptm.end = proc.time()
 print(fit.stan, c('sigmaRan1'), digits=3)
 print(fit.stan, c('phi'), digits=3)
@@ -259,10 +259,10 @@ write.csv(dfResults, file='results/DEAnalysisTgVsWT.xls')
 
 ######### do a comparison with deseq2
 str(dfSample.2)
-dfDesign = data.frame(Treatment = factor(dfSample.2$group1, levels = c('WT', 'Tg')), Patient=factor(dfSample.2$group2),
+dfDesign = data.frame(Treatment = factor(dfSample.2$group1, levels = c('WT', 'Tg')), Patient=factor(dfSample.2$fReplicates),
                       row.names=colnames(mData))
 
-oDseq = DESeqDataSetFromMatrix(mData, dfDesign, design = ~ Treatment + Patient)
+oDseq = DESeqDataSetFromMatrix(mData, dfDesign, design = ~ Treatment)# + Patient)
 oDseq = DESeq(oDseq)
 
 plotDispEsts(oDseq)
