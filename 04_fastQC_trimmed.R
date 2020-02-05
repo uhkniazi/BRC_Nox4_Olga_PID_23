@@ -110,12 +110,16 @@ l$PCA.jitter = F; l$HC.jitter = F;
 oDiag = CDiagnosticPlotsSetParameters(oDiag, l)
 
 str(ob@lMeta$files)
-fBatch = factor(ob@lMeta$files$group3)
+fBatch = factor(ob@lMeta$files$group1)
+## use the titles to identify biological groups sequenced twice i.e. technical replicates
+fReplicates = factor(gsub('(\\d+)-.+', '\\1',  dfSample$title))
+levels(fReplicates)
 ## try some various factors to make the plots of low dimensional summaries
 plot.mean.summary(oDiag, fBatch)
 plot.sigma.summary(oDiag, fBatch)
 boxplot.median.summary(oDiag, fBatch)
 plot.PCA(oDiag, fBatch)
+plot.PCA(oDiag, fReplicates)
 plot.dendogram(oDiag, fBatch, labels_cex = 0.8)
 
 ## looking at alphabets 
@@ -143,9 +147,11 @@ oDiag.2 = CDiagnosticPlotsSetParameters(oDiag.2, l)
 
 str(ob@lMeta$files)
 fBatch = factor(ob@lMeta$files$group2):factor(ob@lMeta$files$group3)
+fBatch = factor(ob@lMeta$files$group3)
 ## try some various factors to make the plots of low dimensional summaries
 plot.mean.summary(oDiag.2, fBatch)
 plot.sigma.summary(oDiag.2, fBatch)
 boxplot.median.summary(oDiag.2, fBatch)
 plot.PCA(oDiag.2, fBatch, legend.pos = 'topright')
+plot.PCA(oDiag.2, fReplicates, legend.pos = 'topright')
 plot.dendogram(oDiag.2, fBatch, labels_cex = 0.8)

@@ -115,11 +115,10 @@ dfSample.2 = droplevels.data.frame(dfSample.2)
 ## normalise the data
 # drop the rows where average across rows is less than 3
 i = rowMeans(mData)
-table( i < 3)
-mData = mData[!(i< 3),]
+table( i < 2)
+mData = mData[!(i< 2),]
 dim(mData)
-# [1] 4209    8
-# [1] 2768   16
+# [1] 3555   16
 
 ivProb = apply(mData, 1, function(inData) {
   inData[is.na(inData) | !is.finite(inData)] = 0
